@@ -17,14 +17,3 @@ func RegisterChatroomRoutes(router *gin.Engine, handler *handlers.ChatroomHandle
 	authenticated.POST("/:id/members", handler.JoinChatroom)
 	authenticated.DELETE("/:id/members/me", handler.LeaveChatroom)
 }
-
-/*
-Responsible for registering the application's HTTP routes.
-
-Methods:
-- Register Chatroom Routes
-- Register User Routes
-- Register Message Routes
-- Register WebSocket Routes
-- Register Middleware
-*/
