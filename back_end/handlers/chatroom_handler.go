@@ -27,6 +27,7 @@ func getAuthenticatedUserID(ginContext *gin.Context) (int64, bool) {
 	userID, exists := ginContext.Get("userID")
 	if !exists {
 		ginContext.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		return 0, false
 	}
 
 	id, ok := userID.(int64)
