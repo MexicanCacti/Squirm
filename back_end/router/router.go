@@ -6,14 +6,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterChatroomRoutes(router *gin.Engine, handler *handlers.ChatroomHandler, authenticationMiddleware gin.HandlerFunc) {
+func RegisterChatroomRoutes(router *gin.Engine, chatroomHandler *handlers.ChatroomHandler, webSocketHandler *handlers.WebSocketHandler, authenticationMiddleware gin.HandlerFunc) {
 	chatrooms := router.Group("/chatrooms")
-	chatrooms.GET("", handler.ListChatrooms)
-	chatrooms.GET("/:id", handler.GetChatroom)
+
+	chatrooms.GET("", chatroomHandler.ListChatrooms)
+	chatrooms.GET("/:id", chatroomHandler.GetChatroom)
+
 	authenticated := chatrooms.Group("")
 	authenticated.Use(authenticationMiddleware)
-	authenticated.POST("", handler.CreateChatroom)
-	authenticated.DELETE("/:id", handler.DeleteChatroom)
-	authenticated.POST("/:id/members", handler.JoinChatroom)
-	authenticated.DELETE("/:id/members/me", handler.LeaveChatroom)
+
+	authenticated.POST("", chatroomHandler.CreateChatroom)
+	authenticated.DELETE("/:id", chatroomHandler.DeleteChatroom)
+	authenticated.POST("/:id/members", chatroomHandler.JoinChatroom)
+	authenticated.DELETE("/:id/members/me", chatroomHandler.LeaveChatroom)
+
+	authenticated.GET("/:id/ws", webSocketHandler.HandleConnection)
 }

@@ -6,6 +6,7 @@ import (
 	"Squirm/back_end/repository"
 	"Squirm/back_end/router"
 	"Squirm/back_end/services"
+	"Squirm/back_end/websocket"
 	"errors"
 	"fmt"
 
@@ -68,33 +69,9 @@ func setupTestDB(t *testing.T) *sql.DB {
 	return db
 }
 
-// Initialize the test router and dependencies.
+// Initialize the test router with a simulated authenticated user.
 func setupTestRouter(t *testing.T) (*gin.Engine, *sql.DB) {
-	t.Helper()
-
-	db := setupTestDB(t)
-
-	chatroomRepo := repository.NewChatroomRepository(db)
-	chatroomService := services.NewChatroomService(chatroomRepo)
-	chatroomHandler := handlers.NewChatroomHandler(chatroomService)
-
-	gin.SetMode(gin.TestMode)
-
-	ginRouter := gin.New()
-
-	// Temporary authentication for testing.
-	testAuth := func(c *gin.Context) {
-		c.Set("userID", int64(1))
-		c.Next()
-	}
-
-	router.RegisterChatroomRoutes(
-		ginRouter,
-		chatroomHandler,
-		testAuth,
-	)
-
-	return ginRouter, db
+	return setupTestRouterForUser(t, 1)
 }
 
 // Helper for executing HTTP requests.
@@ -623,6 +600,10 @@ func setupTestRouterForUser(
 	chatroomService := services.NewChatroomService(chatroomRepo)
 	chatroomHandler := handlers.NewChatroomHandler(chatroomService)
 
+	chatroomRegistry := websocket.NewChatroomRegistry()
+	webSocketManager := websocket.NewWebSocketManager(chatroomRegistry, chatroomService)
+	webSocketHandler := handlers.NewWebSocketHandler(webSocketManager)
+
 	gin.SetMode(gin.TestMode)
 	ginRouter := gin.New()
 
@@ -634,6 +615,7 @@ func setupTestRouterForUser(
 	router.RegisterChatroomRoutes(
 		ginRouter,
 		chatroomHandler,
+		webSocketHandler,
 		testAuth,
 	)
 

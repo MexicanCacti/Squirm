@@ -6,6 +6,7 @@ import (
 	"Squirm/back_end/repository"
 	"Squirm/back_end/router"
 	"Squirm/back_end/services"
+	"Squirm/back_end/websocket"
 	"context"
 	"log"
 	"os"
@@ -31,11 +32,15 @@ func main() {
 	chatroomService := services.NewChatroomService(chatroomRepository)
 	chatroomHandler := handlers.NewChatroomHandler(chatroomService)
 
+	chatroomRegistry := websocket.NewChatroomRegistry()
+	webSocketManager := websocket.NewWebSocketManager(chatroomRegistry, chatroomService)
+	webSocketHandler := handlers.NewWebSocketHandler(webSocketManager)
+
 	ginRouter := gin.Default()
 
 	authMiddleware := services.DevelopmentAuthMiddleware()
 
-	router.RegisterChatroomRoutes(ginRouter, chatroomHandler, authMiddleware)
+	router.RegisterChatroomRoutes(ginRouter, chatroomHandler, webSocketHandler, authMiddleware)
 
 	if err := ginRouter.Run(":8080"); err != nil {
 		log.Fatal(err)
