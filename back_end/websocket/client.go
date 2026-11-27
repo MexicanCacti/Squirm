@@ -75,8 +75,8 @@ func (client *Client) WriteMessages() {
 			err = client.Connection.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
 				log.Printf("websocket write error for user %d : %v", client.UserID, err)
+				return
 			}
-			return
 		}
 	}
 }

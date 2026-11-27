@@ -1,6 +1,9 @@
 package websocket
 
-import "sync"
+import (
+	"log"
+	"sync"
+)
 
 // chatroom currently being managed in memory
 
@@ -24,8 +27,19 @@ func (activeChatroom *ActiveChatroom) AddClient(client *Client) {
 func (activeChatroom *ActiveChatroom) RemoveClient(client *Client) {
 	activeChatroom.mu.Lock()
 	defer activeChatroom.mu.Unlock()
-
+	log.Printf(
+		"removing client=%p user=%d room=%d before=%d",
+		client,
+		client.UserID,
+		activeChatroom.ChatroomID,
+		len(activeChatroom.ConnectedClients),
+	)
 	delete(activeChatroom.ConnectedClients, client)
+	log.Printf(
+		"after removal: room=%d connections=%d",
+		activeChatroom.ChatroomID,
+		len(activeChatroom.ConnectedClients),
+	)
 }
 
 func (activeChatroom *ActiveChatroom) BroadcastMessage(message []byte) {
@@ -35,6 +49,13 @@ func (activeChatroom *ActiveChatroom) BroadcastMessage(message []byte) {
 
 	for client := range activeChatroom.ConnectedClients {
 		if !client.QueueMessage(message) {
+			log.Printf(
+				"disconnecting slow client: user=%d room=%d queue=%d capacity=%d",
+				client.UserID,
+				client.ChatroomID,
+				len(client.OutboundQueue),
+				cap(client.OutboundQueue),
+			)
 			slowClients = append(slowClients, client)
 		}
 	}
